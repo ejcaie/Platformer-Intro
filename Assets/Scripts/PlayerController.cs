@@ -6,6 +6,8 @@ public class PlayerController : MonoBehaviour
     public float apexHeight;
     public float apexTime;
     public float speed;
+    private float jumpVelocity;
+    private float gravity;
     public enum FacingDirection
     {
         left, right
@@ -35,19 +37,26 @@ public class PlayerController : MonoBehaviour
         {
             rb.AddForce(Vector2.up.normalized * apexHeight);       
         }
+        IsWalking();
+        GetFacingDirection();
     }
 
     public bool IsWalking()
     {
-        return false;
+        if (Input.GetAxis("Horizontal") != 0) return true;
+        else return false;
     }
     public bool IsGrounded()
     {
+        
         return false;
     }
 
     public FacingDirection GetFacingDirection()
     {
-        return FacingDirection.left;
+        if (Input.GetAxis("Horizontal") > 0) return FacingDirection.right;
+        if (Input.GetAxis("Horizontal") < 0) return FacingDirection.left;
+        else return FacingDirection.
+
     }
 }
