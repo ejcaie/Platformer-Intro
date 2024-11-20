@@ -50,8 +50,14 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        
-        return false;
+        Debug.DrawRay(transform.position, Vector3.down, Color.green);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector3.down, 1f);
+        if (hit)
+        {
+            Debug.Log("hit");
+            return true;
+        }
+        else return false;
     }
 
     public FacingDirection GetFacingDirection()
