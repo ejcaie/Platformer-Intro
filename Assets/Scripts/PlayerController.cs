@@ -39,8 +39,6 @@ public class PlayerController : MonoBehaviour
         {
             rb.AddForce(Vector2.up.normalized * apexHeight);       
         }
-        IsWalking();
-        GetFacingDirection();
     }
 
     public bool IsWalking()
