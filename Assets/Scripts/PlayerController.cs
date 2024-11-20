@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     public float speed;
     private float jumpVelocity;
     private float gravity;
+    private bool lastDirectionLeft;
     public enum FacingDirection
     {
         left, right
@@ -17,6 +18,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        lastDirectionLeft = false;
     }
 
     // Update is called once per frame
@@ -54,9 +56,18 @@ public class PlayerController : MonoBehaviour
 
     public FacingDirection GetFacingDirection()
     {
-        if (Input.GetAxis("Horizontal") > 0) return FacingDirection.right;
-        if (Input.GetAxis("Horizontal") < 0) return FacingDirection.left;
-        else return FacingDirection.
+        if (Input.GetAxis("Horizontal") > 0)
+        {
+            lastDirectionLeft = false;
+            return FacingDirection.right;
+        }
+        if (Input.GetAxis("Horizontal") < 0)
+        {
+            lastDirectionLeft = true;
+            return FacingDirection.left;
+        }
+        else if (lastDirectionLeft == true) return FacingDirection.left;
+        else return FacingDirection.right;
 
     }
 }
