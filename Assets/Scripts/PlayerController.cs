@@ -63,14 +63,12 @@ public class PlayerController : MonoBehaviour
         if (Input.GetAxis("Horizontal") > 0)
         {
             lastDirectionLeft = false;
-            return FacingDirection.right;
         }
         if (Input.GetAxis("Horizontal") < 0)
         {
             lastDirectionLeft = true;
-            return FacingDirection.left;
         }
-        else if (lastDirectionLeft == true) return FacingDirection.left;
+        if (lastDirectionLeft == true) return FacingDirection.left;
         else return FacingDirection.right;
 
     }
