@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour
     public float maxSpeed = 5f;
     public float accelerationTime = 0.25f;
     public float decelerationTime = 0.15f;
+    public float terminalSpeed = 10f;
 
     [Header("Vertical")]
     public float apexHeight = 3f;
@@ -41,7 +42,6 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 velocity;
 
-    // Start is called before the first frame update
     public void Start()
     {
         body.gravityScale = 0;
@@ -53,7 +53,6 @@ public class PlayerController : MonoBehaviour
         initialJumpSpeed = 2 * apexHeight / apexTime;
     }
 
-    // Update is called once per frame
     public void Update()
     {
         previousState = currentState;
@@ -73,7 +72,7 @@ public class PlayerController : MonoBehaviour
             case PlayerState.dead:
                 break;
             case PlayerState.idle:
-                if (isGrounded) currentState = PlayerState.jumping;
+                if (!isGrounded) currentState = PlayerState.jumping;
                 else if (velocity.x != 0) currentState = PlayerState.walking;
                 break;
             case PlayerState.walking:
@@ -93,7 +92,10 @@ public class PlayerController : MonoBehaviour
         JumpUpdate();
 
         if (!isGrounded)
+        {
             velocity.y += gravity * Time.deltaTime;
+            if (velocity.y < -terminalSpeed) velocity.y = -terminalSpeed;
+        }
         else
             velocity.y = 0;
 
@@ -163,14 +165,6 @@ public class PlayerController : MonoBehaviour
     public bool IsGrounded()
     {
         return isGrounded;
-       /* Debug.DrawRay(transform.position, Vector3.down, Color.green);
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector3.down, 1f);
-        if (hit)
-        {
-            Debug.Log("hit");
-            return true;
-        }
-        else return false;*/
     }
 
     public FacingDirection GetFacingDirection()
