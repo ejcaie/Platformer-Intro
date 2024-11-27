@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour
     public float accelerationTime = 0.25f;
     public float decelerationTime = 0.15f;
     public float terminalSpeed = 10f;
+    public float coyoteJumpTime = 0.25f;
+    public float coyoteTimer = 0f;
 
     [Header("Vertical")]
     public float apexHeight = 3f;
@@ -39,6 +41,7 @@ public class PlayerController : MonoBehaviour
 
     private bool isGrounded = false;
     private bool isDead = false;
+    private bool hasJumped = true;
 
     private Vector2 velocity;
 
@@ -93,11 +96,18 @@ public class PlayerController : MonoBehaviour
 
         if (!isGrounded)
         {
+            coyoteTimer = coyoteTimer + 1 * Time.deltaTime;
             velocity.y += gravity * Time.deltaTime;
             if (velocity.y < -terminalSpeed) velocity.y = -terminalSpeed;
         }
         else
             velocity.y = 0;
+
+        if (isGrounded == true)
+        {
+            coyoteTimer = 0;
+            hasJumped = false;
+        }
 
         body.velocity = velocity;
     }
@@ -131,8 +141,9 @@ public class PlayerController : MonoBehaviour
 
     private void JumpUpdate()
     {
-        if (isGrounded && Input.GetButton("Jump"))
+        if (isGrounded && Input.GetButton("Jump") && hasJumped == false || coyoteTimer <= coyoteJumpTime && Input.GetButton("Jump") && hasJumped == false)
         {
+            hasJumped = true;
             velocity.y = initialJumpSpeed;
             isGrounded = false;
         }
@@ -140,11 +151,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckForGround()
     {
-        isGrounded = Physics2D.OverlapBox(
-            transform.position + Vector3.down * groundCheckOffset,
-            groundCheckSize,
-            0,
-            groundCheckMask);
+        isGrounded = Physics2D.OverlapBox(transform.position + Vector3.down * groundCheckOffset, groundCheckSize, 0, groundCheckMask);
     }
 
     private void DebugDrawGroundCheck()
