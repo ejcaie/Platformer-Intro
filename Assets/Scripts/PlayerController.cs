@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 public enum FacingDirection
@@ -7,7 +8,7 @@ public enum FacingDirection
 
 public enum PlayerState
 {
-    idle, walking, jumping, dead
+    idle, walking, jumping, dead, dash
 }
 
 public class PlayerController : MonoBehaviour
@@ -24,6 +25,10 @@ public class PlayerController : MonoBehaviour
     public float terminalSpeed = 10f;
     public float coyoteJumpTime = 0.25f;
     public float coyoteTimer = 0f;
+    public float dashValue = 10f;
+    public float dashTimer = 0f;
+    public float dashDuration = 1f;
+    public float dashResetTime = 3f;
 
     [Header("Vertical")]
     public float apexHeight = 3f;
@@ -34,6 +39,9 @@ public class PlayerController : MonoBehaviour
     public Vector2 groundCheckSize = new(0.4f, 0.1f);
     public LayerMask groundCheckMask;
 
+    [Header("Wall Checking")]
+    public Vector2 wallCheckSize = new(1.3f, 1f);
+
     private float accelerationRate;
     private float decelerationRate;
     private float gravity;
@@ -42,8 +50,11 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded = false;
     private bool isDead = false;
     private bool hasJumped = true;
+    private bool onWall = false;
+    private bool hasWallJumped = false;
 
     private Vector2 velocity;
+    private Quaternion upright = new Quaternion(0, 0, 0, 0);
 
     public void Start()
     {
@@ -61,9 +72,14 @@ public class PlayerController : MonoBehaviour
         previousState = currentState;
 
         CheckForGround();
+        CheckForWall();
 
         Vector2 playerInput = new Vector2();
         playerInput.x = Input.GetAxisRaw("Horizontal");
+
+        if (Input.GetKey(KeyCode.C) && dashTimer > dashResetTime) DashReset();
+        if (currentState == PlayerState.dash) DashUpdate();
+        dashTimer = dashTimer + 1 * Time.deltaTime;
 
         if (isDead)
         {
@@ -89,12 +105,19 @@ public class PlayerController : MonoBehaviour
                     else currentState = PlayerState.idle;
                 }
                 break;
+            case PlayerState.dash:
+                if (dashTimer < dashDuration) { }
+
+                else if (isGrounded && velocity.x != 0) currentState = PlayerState.walking;
+                else if (isGrounded && velocity.x == 0) currentState = PlayerState.idle;
+                else if (!isGrounded) currentState = PlayerState.jumping;
+                break;
         }
 
         MovementUpdate(playerInput);
         JumpUpdate();
 
-        if (!isGrounded)
+        if (!isGrounded && currentState != PlayerState.dash)
         {
             coyoteTimer = coyoteTimer + 1 * Time.deltaTime;
             velocity.y += gravity * Time.deltaTime;
@@ -107,6 +130,11 @@ public class PlayerController : MonoBehaviour
         {
             coyoteTimer = 0;
             hasJumped = false;
+
+            if (transform.rotation != upright)
+            {
+                transform.rotation = upright;
+            }
         }
 
         body.velocity = velocity;
@@ -114,10 +142,13 @@ public class PlayerController : MonoBehaviour
 
     private void MovementUpdate(Vector2 playerInput)
     {
-        if (playerInput.x < 0)
-            currentDirection = FacingDirection.left;
-        else if (playerInput.x > 0)
-            currentDirection = FacingDirection.right;
+        if (currentState != PlayerState.dash)
+        {
+            if (playerInput.x < 0)
+                currentDirection = FacingDirection.left;
+            else if (playerInput.x > 0)
+                currentDirection = FacingDirection.right;
+        }
 
         if (playerInput.x != 0)
         {
@@ -144,14 +175,44 @@ public class PlayerController : MonoBehaviour
         if (isGrounded && Input.GetButton("Jump") && hasJumped == false || coyoteTimer <= coyoteJumpTime && Input.GetButton("Jump") && hasJumped == false)
         {
             hasJumped = true;
+            hasWallJumped = false;
+            velocity.y = initialJumpSpeed;
+            isGrounded = false;
+        }
+        else if (onWall && Input.GetButton("Jump") && hasWallJumped == false)
+        {
+            hasWallJumped = true;
+            velocity.x = -velocity.x;
             velocity.y = initialJumpSpeed;
             isGrounded = false;
         }
     }
+    private void DashReset()
+    {
+        currentState = PlayerState.dash;
+        dashTimer = 0;
+    }
+    private void DashUpdate()
+    {
+        if (currentDirection == FacingDirection.right)
+        {
+            transform.position = transform.position + Vector3.right * dashValue * Time.deltaTime;
+        }
+        else
+        {
+            transform.position = transform.position + Vector3.left * dashValue * Time.deltaTime;
+        }
+    }
+
 
     private void CheckForGround()
     {
         isGrounded = Physics2D.OverlapBox(transform.position + Vector3.down * groundCheckOffset, groundCheckSize, 0, groundCheckMask);
+    }
+
+    private void CheckForWall()
+    {
+        onWall = Physics2D.OverlapBox(transform.position, wallCheckSize, 0, groundCheckMask);
     }
 
     private void DebugDrawGroundCheck()
@@ -163,6 +224,7 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position + Vector3.down * groundCheckOffset, groundCheckSize);
+        Gizmos.DrawWireCube(transform.position, wallCheckSize);
     }
 
     public bool IsWalking()
