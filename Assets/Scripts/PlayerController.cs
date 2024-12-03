@@ -178,6 +178,8 @@ public class PlayerController : MonoBehaviour
             hasWallJumped = false;
             velocity.y = initialJumpSpeed;
             isGrounded = false;
+
+            print($"In coyote - {isGrounded}");
         }
         else if (onWall && Input.GetButton("Jump") && hasWallJumped == false)
         {
@@ -185,6 +187,8 @@ public class PlayerController : MonoBehaviour
             velocity.x = -velocity.x;
             velocity.y = initialJumpSpeed;
             isGrounded = false;
+
+            print($"In wall - {isGrounded}");
         }
     }
     private void DashReset()
@@ -208,17 +212,12 @@ public class PlayerController : MonoBehaviour
     private void CheckForGround()
     {
         isGrounded = Physics2D.OverlapBox(transform.position + Vector3.down * groundCheckOffset, groundCheckSize, 0, groundCheckMask);
+        print($"In Check - {isGrounded}");
     }
 
     private void CheckForWall()
     {
         onWall = Physics2D.OverlapBox(transform.position, wallCheckSize, 0, groundCheckMask);
-    }
-
-    private void DebugDrawGroundCheck()
-    {
-        Vector3 p1 = transform.position + Vector3.down * groundCheckOffset +
-            new Vector3(groundCheckSize.x / 2, groundCheckSize.y / 2);
     }
 
     private void OnDrawGizmos()
