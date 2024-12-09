@@ -1732,6 +1732,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   body: {fileID: 1433354318}
+  playerTransform: {fileID: 1433354315}
   currentState: 0
   previousState: 0
   maxSpeed: 5

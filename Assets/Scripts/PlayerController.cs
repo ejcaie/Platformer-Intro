@@ -1,3 +1,4 @@
+using System;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -14,6 +15,8 @@ public enum PlayerState
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D body;
+    public Transform playerTransform;
+
     private FacingDirection currentDirection = FacingDirection.right;
     public PlayerState currentState = PlayerState.idle;
     public PlayerState previousState = PlayerState.idle;
@@ -115,7 +118,11 @@ public class PlayerController : MonoBehaviour
         }
 
         MovementUpdate(playerInput);
-        JumpUpdate();
+
+        if (currentState != PlayerState.dead)
+        {
+            JumpUpdate();
+        }
 
         if (!isGrounded && currentState != PlayerState.dash)
         {
@@ -133,10 +140,10 @@ public class PlayerController : MonoBehaviour
 
             if (transform.rotation != upright)
             {
+                if (playerTransform.rotation.z >= 0.7 || playerTransform.rotation.z <= -0.7) currentState = PlayerState.dead;
                 transform.rotation = upright;
-            }
+            }   
         }
-
         body.velocity = velocity;
     }
 
@@ -178,17 +185,13 @@ public class PlayerController : MonoBehaviour
             hasWallJumped = false;
             velocity.y = initialJumpSpeed;
             isGrounded = false;
-
-            print($"In coyote - {isGrounded}");
         }
         else if (onWall && Input.GetButton("Jump") && hasWallJumped == false)
         {
             hasWallJumped = true;
-            velocity.x = -velocity.x;
+            velocity.x = -(velocity.x * 2);
             velocity.y = initialJumpSpeed;
             isGrounded = false;
-
-            print($"In wall - {isGrounded}");
         }
     }
     private void DashReset()
@@ -212,7 +215,6 @@ public class PlayerController : MonoBehaviour
     private void CheckForGround()
     {
         isGrounded = Physics2D.OverlapBox(transform.position + Vector3.down * groundCheckOffset, groundCheckSize, 0, groundCheckMask);
-        print($"In Check - {isGrounded}");
     }
 
     private void CheckForWall()
